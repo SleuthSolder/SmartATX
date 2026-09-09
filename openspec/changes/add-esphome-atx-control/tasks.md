@@ -21,12 +21,13 @@
 - [ ] 3.5 Verify the status LED tracks the switch, and diagnostics report in Home Assistant
 
 ## 4. Documentation
-- [ ] 4.1 Write `README.md`: what it is, the `+5VSB` insight, wiring table, quick start
-- [ ] 4.2 Write the safety section, placed ahead of the wiring steps
-- [ ] 4.3 Document the Home Assistant setup and how voice control now routes through HA
+- [x] 4.1 Write `README.md`: what it is, the `+5VSB` insight, wiring table, quick start
+- [x] 4.2 Write the safety section, placed ahead of the wiring steps
+- [x] 4.3 Document the Home Assistant setup and how voice control now routes through HA
 - [ ] 4.4 Document the `PS_ON` 5 V finding, the measured value, and the in-spec alternatives
-- [ ] 4.5 Record the alternatives not taken (Matter, SinricPro, patched FauxmoESP) with one line each
-- [ ] 4.6 Confirm no credentials appear in any tracked file or in history
+      (finding and alternatives written up; blocked on the measurement from task 1.2)
+- [x] 4.5 Record the alternatives not taken (Matter, SinricPro, patched FauxmoESP) with one line each
+- [x] 4.6 Confirm no credentials appear in any tracked file or in history
 
 ## 5. Close out
 - [ ] 5.1 Cross-check the finished config and docs against the article guide at
