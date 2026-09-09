@@ -5,13 +5,13 @@
 - [ ] 1.4 Bench-test the supply: short green to black, confirm 3.3 V / 5 V / 12 V on the rails
 
 ## 2. ESPHome configuration
-- [ ] 2.1 Add `.gitignore` covering `secrets.yaml` and ESPHome build artifacts
-- [ ] 2.2 Add `secrets.yaml.example` documenting every required key
-- [ ] 2.3 Write `smart-atx.yaml`: esp32 board, WiFi, native API, OTA, logger
-- [ ] 2.4 Add the PSU switch on GPIO18 as open-drain, `restore_mode: ALWAYS_OFF`, with comments
-- [ ] 2.5 Add the onboard-LED status indicator mirroring the switch state
-- [ ] 2.6 Add diagnostic entities: uptime, WiFi signal, free heap, restart button
-- [ ] 2.7 Validate the config with `esphome config smart-atx.yaml`
+- [x] 2.1 Add `.gitignore` covering `secrets.yaml` and ESPHome build artifacts
+- [x] 2.2 Add `secrets.yaml.example` documenting every required key
+- [x] 2.3 Write `smart-atx.yaml`: esp32 board, WiFi, native API, OTA, logger
+- [x] 2.4 Add the PSU switch on GPIO18 as open-drain, `restore_mode: ALWAYS_OFF`, with comments
+- [x] 2.5 Add the onboard-LED status indicator mirroring the switch state
+- [x] 2.6 Add diagnostic entities: uptime, WiFi signal, free heap, restart button
+- [x] 2.7 Validate the config with `esphome config smart-atx.yaml`
 
 ## 3. Hardware verification
 - [ ] 3.1 Flash over USB and confirm the device appears in Home Assistant

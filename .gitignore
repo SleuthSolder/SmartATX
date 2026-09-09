@@ -1,0 +1,12 @@
+# ESPHome secrets — never commit. See secrets.yaml.example for the required keys.
+secrets.yaml
+
+# ESPHome build output
+.esphome/
+*.bin
+*.elf
+
+# Editors / OS
+.venv/
+__pycache__/
+.DS_Store

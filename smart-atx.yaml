@@ -1,0 +1,172 @@
+# =============================================================================
+# Smart ATX Bench Supply — ESPHome configuration
+#
+# An ESP32 turns a scrap PC (ATX) power supply into a bench supply switchable
+# from Home Assistant. It works because of one trick:
+#
+#   An ATX supply's main rails stay off until PS_ON (pin 16, green) is pulled
+#   to ground — but a controller can't ground it without power. The +5VSB rail
+#   (pin 9, violet) is always live, even with the supply "off", so it powers
+#   the ESP32, which then grounds PS_ON on command.
+#
+# Wiring (unchanged from the 2020 build):
+#
+#   ESP32 pin  | ATX 24-pin  | Wire   | Purpose
+#   -----------|-------------|--------|-----------------------------------------
+#   Vin        | pin 9       | violet | +5VSB, always-on standby rail
+#   GND        | pin 19      | black  | ground
+#   GPIO18     | pin 16      | green  | PS_ON — ground it to start the supply
+#
+# Replaces the original FauxmoESP firmware, which emulated a Philips Hue bulb
+# so Alexa could discover it over SSDP. Newer Echo devices stopped finding it.
+# Voice control now rides Home Assistant instead of any on-device emulation.
+#
+# See docs/old-build-archaeology.md for how the board was identified and for
+# the PS_ON voltage caveat.
+# =============================================================================
+
+substitutions:
+  device_name: smart-atx
+  friendly_name: "Smart ATX Bench Supply"
+
+  # --- Hardware-specific values ---------------------------------------------
+  # These two are the only board-dependent settings in this file. If you are
+  # adapting this to a different ESP32 board, these plus `board:` below are all
+  # you need to change.
+
+  # Drives PS_ON. Must be a pin that boots high-impedance — GPIO18 is not a
+  # strapping pin, so it floats during the boot window before ESPHome takes
+  # over, which keeps the supply off. Do not move this to GPIO0, 2, 5, 12 or 15
+  # without checking the ESP32 strapping-pin table first.
+  ps_on_pin: GPIO18
+
+  # Onboard blue LED on the DOIT DevKit V1. GPIO2 is a strapping pin, but it
+  # only matters at boot; driving it as an output afterwards is fine.
+  status_led_pin: GPIO2
+
+esphome:
+  name: ${device_name}
+  friendly_name: ${friendly_name}
+  comment: "ATX bench supply — ESP32 on +5VSB grounds PS_ON"
+
+esp32:
+  # PlatformIO board ID. NOTE: the original 2020 build never recorded its
+  # board. This is inferred at ~7/10 confidence from evidence in the old
+  # sketch — see docs/old-build-archaeology.md. If your silkscreen says
+  # otherwise, change this line and status_led_pin above; nothing else depends
+  # on it.
+  board: esp32doit-devkit-v1
+  framework:
+    type: esp-idf
+
+logger:
+  level: INFO
+
+# Native API — this is how Home Assistant talks to the device. No cloud, no
+# Hue emulation, no SSDP. The encryption key lives in secrets.yaml.
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+# Over-the-air updates, so the ESP32 can be reflashed while wired into the
+# supply. The first flash must still be over USB.
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # If the network is unreachable, raise an AP so the device can be recovered
+  # without unwiring it. The supply stays OFF the whole time — see the switch
+  # definition below.
+  ap:
+    ssid: "${friendly_name} Fallback"
+    password: !secret ap_password
+
+captive_portal:
+
+# Backs the free-heap and reset-reason diagnostics further down.
+debug:
+  update_interval: 60s
+
+# -----------------------------------------------------------------------------
+# Outputs
+# -----------------------------------------------------------------------------
+output:
+  # Onboard LED, driven from the switch's automations so it mirrors the supply.
+  # Gives an at-a-glance state at the bench without opening Home Assistant.
+  - platform: gpio
+    id: status_led_output
+    pin: ${status_led_pin}
+
+# -----------------------------------------------------------------------------
+# The supply itself
+# -----------------------------------------------------------------------------
+switch:
+  - platform: gpio
+    id: atx_psu
+    name: "Power"
+    icon: "mdi:power-plug"
+
+    pin:
+      number: ${ps_on_pin}
+
+      # OPEN DRAIN — this is the safety-critical part of the whole config.
+      #
+      # The pin can only pull PS_ON low or let go of it entirely; it can never
+      # drive PS_ON high. The supply's own internal pull-up to +5VSB defines the
+      # "off" state. This mirrors what the 2020 sketch did by toggling
+      # pinMode() between INPUT (float = off) and OUTPUT+LOW (drive = on).
+      #
+      # A plain push-pull output would be wrong: it would actively drive PS_ON
+      # to 3.3 V against the supply's 5 V pull-up, fighting it and sourcing
+      # current into the PSU's control input.
+      mode:
+        output: true
+        open_drain: true
+
+      # Open drain writes LOW to pull down and HIGH to release. Switch "on"
+      # must pull PS_ON down, so the logic is inverted.
+      inverted: true
+
+    # ALWAYS_OFF, not RESTORE_DEFAULT_OFF. After a power blip, crash, or
+    # reflash, the supply must come back OFF — never resume on its own into a
+    # load nobody is standing next to.
+    restore_mode: ALWAYS_OFF
+
+    on_turn_on:
+      - output.turn_on: status_led_output
+    on_turn_off:
+      - output.turn_off: status_led_output
+
+# -----------------------------------------------------------------------------
+# Diagnostics — none of these can affect the supply's state
+# -----------------------------------------------------------------------------
+sensor:
+  - platform: uptime
+    type: seconds
+    name: "Uptime"
+    entity_category: diagnostic
+
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+    entity_category: diagnostic
+
+  - platform: debug
+    free:
+      name: "Heap Free"
+      entity_category: diagnostic
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "Reset Reason"
+      entity_category: diagnostic
+
+button:
+  - platform: restart
+    name: "Restart"
+    entity_category: diagnostic
