@@ -62,8 +62,26 @@ Three connections, unchanged from the original build:
 
 The control pin is configured **open-drain**: it can pull `PS_ON` low or release it
 entirely, but it can never drive it high. The supply's own pull-up defines the off state.
+
+| Switch | Pin | `PS_ON` | Supply |
+|---|---|---|---|
+| off | high-impedance, floating | held high by the supply's pull-up | **off** |
+| on | driven to GND | low | **on** |
+
 That means any reset, crash, reflash, or loss of WiFi leaves the supply **off** — the
-firmware cannot fail into an on state.
+firmware cannot fail into an on state. Two details make that true rather than merely
+intended:
+
+- Before ESPHome starts, GPIO18 sits at its hardware reset default — high-impedance
+  input, pulls disabled — so the supply stays off through the boot window.
+- ESPHome writes the off state *before* it enables the open-drain output, so the
+  ESP32's `GPIO_OUT` register (which resets to 0) can't briefly pull `PS_ON` low and
+  kick the supply on at boot.
+
+The 2020 firmware reached the same two states a different way, by switching `pinMode()`
+between `INPUT` (floating) and `OUTPUT` + `LOW` (grounded). Open-drain gets there without
+reconfiguring the pin, and keeps the input buffer disabled — so the voltage on `PS_ON`
+isn't applied to it. See the caveat below for why that matters.
 
 ### One caveat worth knowing
 

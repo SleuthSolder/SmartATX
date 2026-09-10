@@ -129,6 +129,24 @@ switch:
 
       # Open drain writes LOW to pull down and HIGH to release. Switch "on"
       # must pull PS_ON down, so the logic is inverted.
+      #
+      # Net effect, which is what matters here:
+      #   OFF -> gpio_set_level(18, 1) -> pull-down FET off -> pin floats
+      #   ON  -> gpio_set_level(18, 0) -> pull-down FET on   -> pin at GND
+      #
+      # This is one static pin mode (GPIO_MODE_OUTPUT_OD), not a mode toggle.
+      # The 2020 sketch got the same two states by switching pinMode() between
+      # INPUT and OUTPUT; open drain reaches them without ever reconfiguring
+      # the pin, and leaves the input buffer disabled so the ~5 V on PS_ON is
+      # not applied to it.
+      #
+      # Boot-order note: the ESP32's GPIO_OUT register resets to 0, so enabling
+      # an open-drain output before writing a level would momentarily pull
+      # PS_ON low and kick the supply on. ESPHome avoids this — GPIOSwitch
+      # setup() writes the off state *before* it configures the pin, then
+      # writes it again after. Before ESPHome runs at all, GPIO18's reset
+      # default is high-impedance input with pulls disabled, so the supply
+      # stays off through the whole boot window.
       inverted: true
 
     # ALWAYS_OFF, not RESTORE_DEFAULT_OFF. After a power blip, crash, or
