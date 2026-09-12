@@ -56,3 +56,23 @@ file and MUST NOT contain real network credentials or API keys in any commit.
 - **WHEN** the repository is reviewed before being made public
 - **THEN** no WiFi credentials, API keys, or OTA passwords appear in tracked files or history
 - **AND** a `secrets.yaml.example` documents every key the configuration requires
+
+### Requirement: Toolchain Setup Record
+The repository SHALL keep a step-by-step record of installing the ESPHome toolchain and
+building the firmware, suitable for a reader reproducing it and for use as article source
+material. Commands and their output MUST be transcribed from runs that actually happened,
+and pitfalls encountered MUST be recorded rather than smoothed over.
+
+#### Scenario: A reader installs the toolchain from scratch
+- **WHEN** a reader follows the setup guide on a clean machine
+- **THEN** they can install ESPHome, validate the config, and produce a flashable binary
+- **AND** each step shows the command and the output it produces
+
+#### Scenario: A pitfall is encountered during setup
+- **WHEN** a step fails, produces an unexpected result, or requires a non-obvious fix
+- **THEN** the guide records what happened, why, and the fix
+- **AND** the record is not rewritten to imply the step succeeded first time
+
+#### Scenario: Steps that need a screen capture are identified
+- **WHEN** a step cannot be conveyed by a command transcript, such as a GUI interaction
+- **THEN** the guide names the screenshot required and what it should show

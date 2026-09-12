@@ -29,6 +29,11 @@
 - [x] 4.5 Record the alternatives not taken (Matter, SinricPro, patched FauxmoESP) with one line each
 - [x] 4.6 Confirm no credentials appear in any tracked file or in history
 
+- [x] 4.7 Document why the Home Assistant add-on cannot flash over USB on a plain-http instance
+- [x] 4.8 Document the USB / `+5VSB` backfeed hazard in the safety section
+- [x] 4.9 Write `docs/setup-and-flash-guide.md` with real command transcripts under `docs/logs/`
+- [ ] 4.10 Capture the 7 screenshots listed in the setup guide (GUI steps; requires a desktop session)
+
 ## 5. Close out
 - [ ] 5.1 Cross-check the finished config and docs against the article guide at
       `~/Dropbox/reports/sleuth-solder-article-guides/smart-atx.html`
