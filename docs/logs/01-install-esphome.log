@@ -1,0 +1,144 @@
+# ESPHome install transcript
+# Host: EndeavourOS, kernel 7.1.9-arch1-2
+# Date: 2026-09-11T21:34:34-04:00
+
+$ uv --version
+uv 0.12.6 (7938ca5d5 2026-08-25 x86_64-unknown-linux-gnu)
+
+$ python3 --version
+Python 3.14.7
+
+$ time uv tool install esphome
+Resolved 84 packages in 2.12s
+Downloading brotli (1.4MiB)
+Downloading pycryptodomex (2.2MiB)
+Downloading cryptography (4.5MiB)
+Downloading esphome-dashboard (5.6MiB)
+Downloading zeroconf (2.1MiB)
+Downloading pydantic-core (2.0MiB)
+Downloading esphome (6.0MiB)
+Downloading resvg-py (1.1MiB)
+   Building esptool==5.3.0
+   Building paho-mqtt==1.6.1
+   Building crcmod==1.7
+      Built paho-mqtt==1.6.1
+ Downloaded resvg-py
+ Downloaded brotli
+      Built crcmod==1.7
+ Downloaded pydantic-core
+ Downloaded pycryptodomex
+ Downloaded zeroconf
+ Downloaded cryptography
+ Downloaded esphome-dashboard
+      Built esptool==5.3.0
+ Downloaded esphome
+Prepared 60 packages in 1.22s
+Installed 84 packages in 729ms
+ + aioesphomeapi==45.3.1
+ + aiohappyeyeballs==2.7.1
+ + ajsonrpc==1.2.0
+ + annotated-types==0.8.0
+ + anyio==4.15.1
+ + argcomplete==3.7.2
+ + async-interrupt==1.2.2
+ + backports-zstd==1.7.0
+ + bitarray==3.11.0
+ + bitstring==4.4.0
+ + bleak==2.1.1
+ + bottle==0.13.4
+ + brotli==1.2.0
+ + cbor2==5.9.0
+ + certifi==2026.7.22
+ + cffi==2.1.1
+ + chacha20poly1305-reuseable==0.13.2
+ + charset-normalizer==3.5.1
+ + click==8.3.3
+ + colorama==0.4.6
+ + crcmod==1.7
+ + cryptography==48.0.1
+ + dbus-fast==5.0.22
+ + esphome==2026.6.5
+ + esphome-dashboard==20260425.0
+ + esphome-glyphsets==0.2.0
+ + esptool==5.3.0
+ + freetype-py==2.5.1
+ + h11==0.16.0
+ + icmplib==3.0.4
+ + idna==3.19
+ + ifaddr==0.2.0
+ + inflate64==1.0.4
+ + intelhex==2.3.0
+ + jinja2==3.1.6
+ + markdown-it-py==4.2.0
+ + markupsafe==3.0.3
+ + marshmallow==3.26.2
+ + mdurl==0.1.2
+ + multivolumefile==0.2.3
+ + noiseprotocol==0.3.1
+ + packaging==26.3
+ + paho-mqtt==1.6.1
+ + pillow==12.2.0
+ + platformio==6.1.19
+ + protobuf==7.36.1
+ + psutil==7.2.2
+ + puremagic==1.30
+ + py7zr==1.1.0
+ + pybcj==1.0.8
+ + pycparser==3.0
+ + pycryptodomex==3.23.0
+ + pydantic==2.13.5
+ + pydantic-core==2.46.5
+ + pyelftools==0.33
+ + pygments==2.21.0
+ + pyparsing==3.3.2
+ + pyppmd==1.3.1
+ + pyserial==3.5
+ + pyyaml==6.0.3
+ + reedsolo==1.7.0
+ + requests==2.34.2
+ + resvg-py==0.3.2
+ + rich==15.0.0
+ + rich-click==1.9.9
+ + ruamel-yaml==0.19.1
+ + ruamel-yaml-clib==0.2.15
+ + semantic-version==2.10.0
+ + smp==4.1.0
+ + smpclient==6.0.0
+ + starlette==0.52.1
+ + tabulate==0.10.0
+ + texttable==1.7.0
+ + tibs==0.5.7
+ + tornado==6.5.7
+ + typing-extensions==4.16.0
+ + typing-inspection==0.4.4
+ + tzdata==2026.3
+ + tzlocal==5.3.1
+ + urllib3==2.7.0
+ + uvicorn==0.40.0
+ + voluptuous==0.16.0
+ + wsproto==1.3.2
+ + zeroconf==0.150.0
+Installed 1 executable: esphome
+
+# exit=0  elapsed=5s
+
+$ which esphome
+/home/miswired/.local/bin/esphome
+
+$ esphome version
+Version: 2026.6.5
+
+# --- Version pitfall -------------------------------------------------
+# 'uv tool install esphome' built its venv on Python 3.11.15 and resolved
+# esphome 2026.6.5 -- the newest release still compatible with 3.11.
+# Pin the interpreter to get the current release.
+
+$ uv tool install --force --python 3.14 esphome
+ + uvicorn==0.40.0
+ + voluptuous==0.16.0
+ + wsproto==1.3.2
+ + zeroconf==0.150.0
+Installed 1 executable: esphome
+
+$ esphome version
+Version: 2026.8.2

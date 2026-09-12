@@ -23,6 +23,13 @@ An ATX supply is not a hobby power brick. Treat it accordingly.
 - **`+5VSB` is live whenever the supply is plugged in**, regardless of whether the main
   rails are on and regardless of the rear rocker switch on some units. Unplug the supply
   from the wall before touching any wiring — the ESP32 included.
+- **Never plug USB into the ESP32 while the supply is connected to mains.** On most ESP32
+  devkits, `VIN` and USB `VBUS` meet at the regulator input, frequently with no isolation
+  diode between them. With the PSU live, your `Vin` lead is a 5 V source — so connecting
+  USB ties your computer's 5 V rail to the supply's `+5VSB` rail and lets the two fight
+  it out. Unplug the supply from the wall, or lift the `Vin` lead, before every flashing
+  session. Check your own board's schematic if you want to know whether it protects you;
+  assume it doesn't until you've looked.
 - **Do not open the supply's case.** The primary side holds mains voltage, and its bulk
   capacitors stay charged after unplugging. Everything in this project is done at the
   24-pin connector, outside the case.
@@ -126,6 +133,36 @@ The MOSFET keeps the same fail-safe behaviour: gate low at reset means off.
    ```bash
    esphome run smart-atx.yaml
    ```
+
+### Flashing without a local toolchain
+
+`esphome run` compiles and flashes in one step, which is the simplest path if you have
+ESPHome on the machine the USB cable is plugged into. If you don't, you have options —
+but note that **none of them let you skip compiling somewhere**. There is no cloud build
+service for ESPHome; every route ends with a binary that something had to build.
+
+**<https://web.esphome.io/>** flashes over Web Serial in the browser. It can:
+
+- install a factory `.bin` you built elsewhere,
+- install a generic adoptable ESPHome firmware ("Prepare for first use") and set up
+  Wi-Fi, so an ESPHome Device Builder can adopt the device over the network,
+- show live serial logs, and reconfigure Wi-Fi.
+
+It needs Chrome or Edge on desktop — Web Serial doesn't exist in Firefox or Safari, and
+not on iOS at all.
+
+So if your Home Assistant box is headless in another room: compile with the ESPHome
+Device Builder add-on there, use **Download firmware binary** to get the factory `.bin`,
+carry it to the machine at the bench, and flash it at web.esphome.io.
+
+> **Why not flash straight from the Home Assistant add-on?** Its "plug into this
+> computer" option also uses Web Serial, and browsers only expose Web Serial in a
+> *secure context*. A Home Assistant instance reached over plain `http://` isn't one, so
+> the option is unavailable — nothing is broken, the browser is refusing by design.
+> web.esphome.io is served over HTTPS, which is exactly why it works where the add-on
+> doesn't.
+
+After the first flash everything is over-the-air anyway, so this choice only matters once.
 
 5. **Adopt it in Home Assistant.** The device announces itself; Settings → Devices &
    Services should offer it under the ESPHome integration. You'll be asked for the API
