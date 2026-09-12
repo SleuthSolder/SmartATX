@@ -237,7 +237,58 @@ INFO Configuration is valid!
 
 ## Step 5 — Compile
 
-<!-- COMPILE_RESULTS -->
+```bash
+esphome compile smart-atx.yaml
+```
+
+**The first compile is slow and large.** ESPHome 2026.8 uses its own ESP-IDF integration
+rather than PlatformIO (the `platformio` toolchain is deprecated and slated for removal in
+2027.2.0), so the first run downloads and builds ESP-IDF 5.5.5 into `~/.cache/esphome/`.
+
+Measured on this machine:
+
+| | |
+|---|---|
+| First compile, cold | **146 s** |
+| Incremental rebuild, no changes | **4 s** |
+| `~/.cache/esphome` after | **1.7 GB** |
+| `.esphome/` in the project | **236 MB** |
+
+Budget the disk space before you start — 2 GB in total, most of it a shared toolchain
+cache that later projects reuse.
+
+> If you have an old `~/.platformio` from previous ESP work, current ESPHome no longer
+> touches it. On this machine it was 11 GB of reclaimable space.
+
+The build ends with a size report:
+
+```
+Total image size: 883559 bytes (.bin may be padded larger)
+RAM:   [===       ]  25.3% (used 45744 bytes from 180736 bytes)
+Flash: [=====     ]  48.2% (used 883559 bytes from 1835008 bytes)
+INFO Creating factory.bin...
+INFO Created: .esphome/build/smart-atx/build/firmware.factory.bin
+INFO Created: .esphome/build/smart-atx/build/firmware.ota.bin
+INFO Created: .esphome/build/smart-atx/build/firmware.elf
+INFO Successfully compiled program.
+```
+
+Roughly half the flash for a config this small is normal — most of it is the Wi-Fi stack
+and the ESPHome API, not your YAML. Adding a few more sensors barely moves it.
+
+### Which binary is which
+
+The build produces three, and picking the wrong one is a common way to waste an evening:
+
+| File | Size | Use it for |
+|---|---|---|
+| `firmware.factory.bin` | 928 KB | **First flash.** Bootloader + partition table + app, written at offset 0. This is the one web.esphome.io wants. |
+| `firmware.ota.bin` | 864 KB | Over-the-air updates to a device already running ESPHome. App only. |
+| `firmware.elf` | — | Debug symbols. For decoding a stack trace, not for flashing. |
+
+If you're taking the browser route from step 0, `firmware.factory.bin` is your file. The
+add-on's **Download firmware binary** button hands you the same thing.
+
 
 ---
 
