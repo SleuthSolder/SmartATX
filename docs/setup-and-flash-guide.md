@@ -340,6 +340,13 @@ want to copy and paste. These are the moments that genuinely need an image:
 
 ---
 
+## The GUI route
+
+If you would rather drive this from a browser than the terminal, the
+[Device Builder walkthrough](device-builder-walkthrough.md) covers it screen by screen,
+including the install dialog, live logs, and the two pitfalls that cost time (the
+`[esphome]` extra, and the `./configs` default directory).
+
 ## Raw transcripts
 
 - [`logs/01-install-esphome.log`](logs/01-install-esphome.log)

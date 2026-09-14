@@ -230,7 +230,12 @@ over. GPIO18 is safe; GPIO0, 2, 5, 12 and 15 are not.
 ```
 smart-atx.yaml          the ESPHome configuration
 secrets.yaml.example    template — copy to secrets.yaml and fill in
-docs/                   how the board was identified, and what came from the old build
+docs/
+  setup-and-flash-guide.md      installing the toolchain, step by step
+  device-builder-walkthrough.md flashing via the web GUI, with screenshots
+  old-build-archaeology.md      how the board was identified from the dead 2020 code
+  logs/                         raw command transcripts
+  images/                       walkthrough screenshots
 openspec/               specs and change proposals driving this project
 ```
 
