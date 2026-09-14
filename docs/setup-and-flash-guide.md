@@ -309,7 +309,59 @@ esphome run smart-atx.yaml
 serial log viewer. On a device that's already on the network it offers OTA instead of
 USB — the first flash has to be USB because there's no firmware to update yet.
 
-*(Pending — requires the hardware. See tasks 3.1–3.5.)*
+To skip the port prompt, name the port yourself:
+
+```console
+$ esphome run smart-atx.yaml --device /dev/ttyUSB0
+...
+Wrote 949216 bytes (620456 compressed) at 0x00000000 in 14.7 seconds (516.2 kbit/s).
+Verifying written data...
+Hash of data verified.
+
+Hard resetting via RTS pin...
+INFO Successfully uploaded program.
+```
+
+Eighteen seconds on a warm build cache. Full transcript:
+[`logs/03-first-flash.log`](logs/03-first-flash.log).
+
+### Do not use `esphome upload` unless you know the binary is current
+
+`esphome upload` flashes **the last binary that was built**. It does not recompile. Use it
+after editing `secrets.yaml` and you will write a stale image, then watch the board fail to
+join a network that doesn't exist:
+
+```
+[W][wifi_esp32:865]: Disconnected ssid='validation-only' reason='Probe Request Unsuccessful'
+```
+
+`esphome run` compiles *then* uploads, which is what you want. You can check which secrets
+are baked into a binary before flashing it:
+
+```bash
+grep -a -c "an-old-ssid" .esphome/build/smart-atx/build/smart-atx.bin
+```
+
+### Confirm the boot
+
+```
+I (27) boot: ESP-IDF v5.5.5 2nd stage bootloader
+[I][app:151]: ESPHome version 2026.8.2 compiled on 2026-09-14 17:02:35 -0400
+[I][app:158]: ESP32 Chip: ESP32 rev1.0, 2 core(s)
+[I][wifi:1128]: Connecting to '<YOUR-SSID>' ... (attempt 1/2 in phase SCAN_CONNECTING)...
+[I][wifi:1609]: Connected
+```
+
+If `esphome logs` shows nothing, you attached after the device had already settled —
+ESPHome is quiet at `INFO` level once running. Press reset for a fresh boot. Full
+transcript: [`logs/04-first-boot.log`](logs/04-first-boot.log).
+
+Then confirm it is actually reachable:
+
+```console
+$ getent hosts smart-atx.local
+10.0.0.30       smart-atx.local
+```
 
 ---
 
@@ -319,7 +371,11 @@ ESPHome devices announce themselves over mDNS. In Home Assistant, **Settings →
 Services** should show a discovered ESPHome device. Accept it and paste the API
 encryption key from your `secrets.yaml`.
 
-*(Pending — requires the hardware.)*
+You should end up with one switch, **Power**, plus four diagnostic entities — Uptime,
+WiFi Signal, Heap Free, and Reset Reason.
+
+*(Not yet done on this build — the device is flashed and reachable, but has not been
+adopted into Home Assistant. See task 3.1.)*
 
 ---
 
@@ -328,15 +384,22 @@ encryption key from your `secrets.yaml`.
 Terminal steps are transcribed above, which beats a screenshot for anything you might
 want to copy and paste. These are the moments that genuinely need an image:
 
+**Already captured** — see [`images/`](images/) and the
+[Device Builder walkthrough](device-builder-walkthrough.md): the dashboard offline and
+online, the install dialog and its advanced options, the logs dialog, and live logs
+streaming over the API.
+
+**Still needed** — these require a human at a browser or a bench:
+
 | # | Shot | Why it earns its place |
 |---|---|---|
 | 1 | Home Assistant add-on install page, USB option greyed out | Visual proof of the HTTP/Web Serial problem — the thing that sends people down this path |
-| 2 | `esphome run` port-selection prompt | The one interactive moment in an otherwise non-interactive flow |
-| 3 | Serial log after a successful boot, showing the WiFi connect and API lines | Proof it worked; also the reference for what "healthy" looks like |
-| 4 | Home Assistant discovered-device card, before adoption | The payoff moment |
-| 5 | The device page in HA: Power switch + the diagnostic entities | The finished result — this is the article's hero UI shot |
-| 6 | web.esphome.io with the board connected | Only if you document the browser route |
-| 7 | Bench: meter on the green wire reading the `PS_ON` idle voltage | Evidence for the 5 V caveat, and hard to describe in words |
+| 2 | The browser's serial-port chooser during a Web Serial flash | The one step that cannot be automated or scripted |
+| 3 | Home Assistant discovered-device card, before adoption | The payoff moment |
+| 4 | The device page in HA: Power switch + the diagnostic entities | The finished result — this is the article's hero UI shot |
+| 5 | web.esphome.io with the board connected | Only if you document the browser route |
+| 6 | Bench: meter on the green wire reading the `PS_ON` idle voltage | Evidence for the 5 V caveat, and hard to describe in words |
+| 7 | Bench: the three taps on the 24-pin connector | Key wiring figure for the article |
 
 ---
 
