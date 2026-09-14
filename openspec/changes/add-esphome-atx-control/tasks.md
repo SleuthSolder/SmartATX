@@ -15,6 +15,8 @@
 
 ## 3. Hardware verification
 - [ ] 3.1 Flash over USB and confirm the device appears in Home Assistant
+      (flashed and on the network at 10.0.0.30, API port open, diagnostics
+      reporting; Home Assistant adoption not yet done)
 - [ ] 3.2 Verify switch on drives the supply on; switch off drives it off
 - [ ] 3.3 Verify fail-safe: supply is off at boot, after a reset, and with no WiFi available
 - [ ] 3.4 Verify the supply stays off through an OTA update
@@ -32,7 +34,9 @@
 - [x] 4.7 Document why the Home Assistant add-on cannot flash over USB on a plain-http instance
 - [x] 4.8 Document the USB / `+5VSB` backfeed hazard in the safety section
 - [x] 4.9 Write `docs/setup-and-flash-guide.md` with real command transcripts under `docs/logs/`
-- [ ] 4.10 Capture the 7 screenshots listed in the setup guide (GUI steps; requires a desktop session)
+- [x] 4.10 Capture the Device Builder GUI screenshots (6 captured headlessly; the
+      browser Web Serial flash and the bench shots still need a human)
+- [x] 4.11 Write `docs/device-builder-walkthrough.md` with the GUI flashing walkthrough
 
 ## 5. Close out
 - [ ] 5.1 Cross-check the finished config and docs against the article guide at
