@@ -44,6 +44,9 @@ Goal: **rip out the FauxmoESP/Alexa code entirely and rebuild control on ESPHome
   In ESPHome this maps most cleanly to an **open-drain GPIO output / switch** (drive low = on, high-Z = off)
   rather than a push-pull output that would actively drive `PS_ON` high — confirm the safe-default
   behavior survives the rewrite. **Verify on the bench, don't assume.**
+  - **Bench-measured (2026-09):** `PS_ON` floats at **~3.8 V** (confirms it's pulled up inside the PSU
+    → open-drain / release-high is the correct control style, not push-pull from 3.3 V logic).
+    `+5VSB` reads **4.99 V** (solid 5 V for the board's Vin regulator).
 
 ## What to build
 
