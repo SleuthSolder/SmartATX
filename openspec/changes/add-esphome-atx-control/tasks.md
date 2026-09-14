@@ -1,5 +1,5 @@
 ## 1. Bench verification (before writing firmware)
-- [ ] 1.1 Confirm the board from the silkscreen and record it in `docs/old-build-archaeology.md`
+- [x] 1.1 Confirm the board from the silkscreen and record it in `docs/old-build-archaeology.md`
 - [ ] 1.2 Measure `PS_ON` idle voltage with the supply in standby and the ESP32 disconnected; record the value
 - [ ] 1.3 Record the supply's `+5VSB` current rating from its label
 - [ ] 1.4 Bench-test the supply: short green to black, confirm 3.3 V / 5 V / 12 V on the rails

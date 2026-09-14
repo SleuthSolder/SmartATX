@@ -63,10 +63,9 @@ Hardware project — verification is on the bench, not in CI:
   default and must survive the rewrite — in ESPHome it maps to an **open-drain** output.
 
 ## Important Constraints
-- **Board is an assumption, not a confirmation.** The old sketch and blog post never
-  name the board. `board: esp32doit-devkit-v1` is inferred from evidence documented in
-  `docs/old-build-archaeology.md` (Conf 7/10). It is confined to a single YAML key plus
-  the status-LED pin so it can be corrected in one edit.
+- **Board confirmed (2026-09-14): ESP32 DEVKIT V1.** Verified from the silkscreen on the
+  physical unit, matching the inference recorded in `docs/old-build-archaeology.md`.
+  `board: esp32doit-devkit-v1` is correct as written.
 - **Wiring is unchanged** from the 2020 build, by decision. Vin ← +5VSB (pin 9),
   GND ← GND (pin 19), GPIO18 → PS_ON (pin 16).
 - **`PS_ON` idles near +5 V and ESP32 GPIOs are not 5 V tolerant.** The original design

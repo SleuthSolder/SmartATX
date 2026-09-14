@@ -98,9 +98,14 @@ that line at. The original build ran this way for years without damage — the s
 series pull-up limits current into the pin's protection diode to a few hundred
 microamps — but "it survived" is not the same as "it's in spec."
 
-> **Measurement status: not yet taken.** The `PS_ON` idle voltage on this specific supply
-> has not been measured. This section will be updated with the real figure rather than an
-> assumed one. See [`docs/old-build-archaeology.md`](docs/old-build-archaeology.md) §4.
+> **Measured 2026-09: `PS_ON` idles at ~3.8 V; `+5VSB` reads 4.99 V.**
+>
+> The `+5VSB` figure is clean. The `PS_ON` figure needs one qualification before you lean
+> on it: ~3.8 V is also almost exactly what you would read if the ESP32 were still
+> connected and *clamping* a higher voltage — its protection diode holds the node near
+> 3.3 V plus a diode drop. Whether 3.8 V is the supply's true open-circuit pull-up or the
+> clamped value depends on whether the control wire was disconnected during the
+> measurement. See [`docs/old-build-archaeology.md`](docs/old-build-archaeology.md) §4.
 
 If you want the in-spec version, either add a series resistor (1–10 kΩ) between GPIO18
 and `PS_ON` to bound that current explicitly, or use a small-signal N-channel MOSFET as a
@@ -205,9 +210,9 @@ If you change the control pin, check the ESP32 strapping-pin table first. It mus
 high-impedance, or the supply may kick on during the boot window before ESPHome takes
 over. GPIO18 is safe; GPIO0, 2, 5, 12 and 15 are not.
 
-> The board this repo targets (`esp32doit-devkit-v1`) is **inferred**, not confirmed —
-> the 2020 project never recorded it. The reasoning and its confidence level are in
-> [`docs/old-build-archaeology.md`](docs/old-build-archaeology.md).
+> This repo targets the **ESP32 DEVKIT V1**, confirmed against the physical board. The
+> 2020 project never recorded which board it used; how it was identified from the dead
+> source code is in [`docs/old-build-archaeology.md`](docs/old-build-archaeology.md).
 
 ## Alternatives not taken
 

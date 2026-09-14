@@ -50,11 +50,11 @@ esphome:
   comment: "ATX bench supply — ESP32 on +5VSB grounds PS_ON"
 
 esp32:
-  # PlatformIO board ID. NOTE: the original 2020 build never recorded its
-  # board. This is inferred at ~7/10 confidence from evidence in the old
-  # sketch — see docs/old-build-archaeology.md. If your silkscreen says
-  # otherwise, change this line and status_led_pin above; nothing else depends
-  # on it.
+  # PlatformIO board ID for the ESP32 DEVKIT V1, confirmed against the
+  # physical board on 2026-09-14. The 2020 build never recorded which board it
+  # used; docs/old-build-archaeology.md covers how it was identified.
+  # Adapting to a different board: change this line and status_led_pin above.
+  # Nothing else depends on it.
   board: esp32doit-devkit-v1
   framework:
     type: esp-idf

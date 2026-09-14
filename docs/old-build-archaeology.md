@@ -117,13 +117,15 @@ esp32:
 
 with the onboard LED on **GPIO2** and PSU control on **GPIO18**.
 
-**Confidence: 7/10.** Points 2.1 and 2.2 are solid and mutually reinforcing; the final
-step to *DOIT specifically* rests on 2.3, which is circumstantial. The assumption is
-deliberately confined to one YAML key and one LED pin number so a correction costs a
-single edit.
+**CONFIRMED (2026-09-14)** by reading the silkscreen on the physical unit: ESP32
+DEVKIT V1. No change to the configuration was needed.
 
-**To settle it definitively:** read the silkscreen on the physical unit. If one side runs
-`VIN GND D13 D12 D14 D27 D26 D25 D33 D32 D35 D34 VN VP EN`, it is a DOIT DevKit V1.
+The inference above was published at confidence 7/10 before the board was checked. It is
+left intact rather than rewritten, because the reasoning is the useful part — the
+`LED_BUILTIN` evidence (2.1) and the header pin ordering (2.2) each independently
+narrowed the field, and the circumstantial Random Nerd Tutorials link (2.3) turned out to
+point the right way. A reader facing the same problem on a different dead project can run
+the same method.
 
 ## 4. Finding not in the original writeup: `PS_ON` idles above the ESP32's rating
 
@@ -150,8 +152,39 @@ This matters because the rewrite is being published as a reproducible project. O
 Current decision: **wiring stays as built** (option 1) — measure, then document honestly.
 Options 2 and 3 are noted for readers who want the in-spec version.
 
-*Confidence: 8/10 on the ATX pull-up going to +5VSB; the actual voltage on this specific
-PSU is a ten-second measurement and has not yet been taken.*
+### Bench measurements, 2026-09
+
+| Node | Reading |
+|---|---|
+| `+5VSB` (pin 9, violet) | **4.99 V** |
+| `PS_ON` (pin 16, green), supply in standby | **~3.8 V** |
+
+`+5VSB` at 4.99 V is unambiguous — a solid 5 V rail for the board's regulator.
+
+**`PS_ON` at ~3.8 V requires care in interpretation**, and the article should not state it
+flatly without resolving this. Two different situations produce that same reading:
+
+1. **Control wire disconnected from the ESP32.** Then 3.8 V is the supply's genuine
+   open-circuit pull-up voltage. It sits just above the ESP32's absolute-maximum input
+   (VDD + 0.3 V = 3.6 V), so the exposure is real but small, and the original design was
+   closer to in-spec than the ATX specification alone would suggest.
+
+2. **Control wire still connected to the ESP32.** Then the measurement is of the ESP32
+   *clamping* the line, not of the supply driving it. The pad's ESD diode conducts into
+   the 3.3 V rail and holds the node at roughly 3.3 V + one diode drop — which lands at
+   about 3.8 V. The supply's true open-circuit voltage would be higher, plausibly the
+   ~5 V the ATX specification implies, and the diode would be conducting continuously
+   for as long as the supply sits in standby.
+
+The numerical coincidence between "a supply that pulls up to 3.8 V" and "an ESP32 clamping
+something higher" is close enough that the two cannot be told apart from the reading alone.
+
+**To resolve:** disconnect the green wire from the ESP32 entirely, leave the supply plugged
+in and in standby, and measure green-to-black with nothing else attached. Still ~3.8 V
+confirms case 1. A jump toward ~5 V confirms case 2.
+
+*Confidence: 8/10 on the ATX specification pulling `PS_ON` up to `+5VSB`. The measurement
+above is recorded as taken; its interpretation is open pending the test described.*
 
 ## 5. What carries into the rewrite
 
