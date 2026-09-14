@@ -3,6 +3,16 @@ secrets.yaml
 
 # ESPHome build output
 .esphome/
+
+# ESPHome Device Builder state. The Device Builder is a separate tool, not part
+# of this project -- if you run it with its config directory pointed here, it
+# drops these files in and they should not be tracked. It also writes its own
+# rules into .git/info/exclude, which is local-only; this entry is the portable
+# one that survives a clone.
+.device-builder*
+configs/
+
+# Firmware artifacts
 *.bin
 *.elf
 
