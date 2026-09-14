@@ -40,8 +40,16 @@ substitutions:
   # without checking the ESP32 strapping-pin table first.
   ps_on_pin: GPIO18
 
-  # Onboard blue LED on the DOIT DevKit V1. GPIO2 is a strapping pin, but it
-  # only matters at boot; driving it as an output afterwards is fine.
+  # Onboard blue LED on the DevKit V1. GPIO2 is a strapping pin, but it only
+  # matters at boot, and this board's LED sits between the pin and ground so it
+  # can't hold the pin high while the ESP32 samples it. Driving it as an output
+  # afterwards is fine.
+  #
+  # ESPHome prints "GPIO2 is a strapping PIN" on every build because of this.
+  # The warning is expected and is left visible on purpose rather than silenced
+  # with `ignore_strapping_warning: true` -- if you adapt this to a board whose
+  # LED is wired to 3.3 V instead of ground, that warning is one you want to
+  # see.
   status_led_pin: GPIO2
 
 esphome:
