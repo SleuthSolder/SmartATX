@@ -275,6 +275,51 @@ build can't act on.
 
 ---
 
+## It writes to your git repository
+
+Worth knowing before you point it at a repo you care about: the Device Builder has a
+**version history** feature, and it implements it by making real git commits in your working
+tree. Its startup log mentions this in passing:
+
+```
+INFO Version history active (git work tree: /home/miswired/Multiverse/esp-light)
+```
+
+Edit a config while it's running — from the browser *or* from your editor — and a commit
+appears, authored by the tool:
+
+```console
+$ git log --oneline -2
+ca5da70 Add the Device Builder walkthrough with screenshots
+be53193 Edit smart-atx.yaml
+
+$ git show --format="author: %an <%ae>" be53193 | head -1
+author: ESPHome Device Builder <device-builder@esphome.io>
+```
+
+It's a reasonable feature and a genuine safety net if you're editing YAML in a browser with
+no version control of your own. But it has consequences:
+
+- Generic commit messages (`Edit smart-atx.yaml`) interleave with your own structured
+  history.
+- It commits whatever changed, so a config with inline credentials rather than `!secret`
+  references would be committed too. (In this repo, `secrets.yaml` is gitignored and has
+  never been committed by anything.)
+- Commits appear without you asking, including for edits you made in a different editor.
+
+To turn it off, set `version_history_enabled` to `false` in
+`.device-builder-preferences.json` in your config directory:
+
+```json
+{
+  "version_history_enabled": false
+}
+```
+
+The tool also drops `.device-builder.json`, `.device-builder-preferences.json`, and
+`.device-builder-peer-link-key.bin` into the config directory, and adds a `.device-builder*`
+rule to `.git/info/exclude` so they stay untracked.
+
 ## What the GUI is good for
 
 Honestly: the dashboard, the config editor, and the network log viewer. The flashing itself
