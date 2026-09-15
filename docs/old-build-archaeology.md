@@ -217,10 +217,11 @@ measure green-to-black plus the current. ~3.8 V ⇒ case 1; a jump toward ~5 V �
 - Sources: Espressif ESP32 datasheet (abs-max, §4.3); ESP32 forum threads on 5 V tolerance;
   Espressif hardware design guidelines (ESD/protection).
 
-**Consequences for the article:** don't state a single PS_ON voltage as fact yet — table,
-diagram, and config comments stay hedged until the wire-off measurement. If it comes back near
-5 V, add the external-FET / series-resistor "make it in-spec" section (noting it ran for years
-as-is).
+**Consequences for the article (decided 2026-09-15):** the article and config now state the
+**in-circuit 3.8 V** measured at the pin (ESP32 connected) plus the currents (<1 mA floating,
+~1 mA when pulled to GND), and offer an external N-FET buffer as the "do it properly" option
+while noting it has run for years as-is. The true *open-circuit* value (case 1 vs case 2) is
+still the open question a FET would moot — re-measure green-off if you ever want to close it.
 
 *Confidence: not-5V-tolerant + abs-max 3.6 V = 9/10 (datasheet). Case 1 vs case 2 = open,
 pending the wire-off test.*

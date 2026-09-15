@@ -129,7 +129,7 @@ switch:
       # pinMode() between INPUT (float = off) and OUTPUT+LOW (drive = on).
       #
       # A plain push-pull output would be wrong: it would actively drive PS_ON
-      # to 3.3 V against the supply's 5 V pull-up, fighting it and sourcing
+      # to 3.3 V against the supply's 3.8 V pull-up, fighting it and sourcing
       # current into the PSU's control input.
       mode:
         output: true
@@ -145,7 +145,7 @@ switch:
       # This is one static pin mode (GPIO_MODE_OUTPUT_OD), not a mode toggle.
       # The 2020 sketch got the same two states by switching pinMode() between
       # INPUT and OUTPUT; open drain reaches them without ever reconfiguring
-      # the pin, and leaves the input buffer disabled so the ~5 V on PS_ON is
+      # the pin, and leaves the input buffer disabled so the 3.8 V on PS_ON is
       # not applied to it.
       #
       # Boot-order note: the ESP32's GPIO_OUT register resets to 0, so enabling
