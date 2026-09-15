@@ -186,39 +186,44 @@ confirms case 1. A jump toward ~5 V confirms case 2.
 *Confidence: 8/10 on the ATX specification pulling `PS_ON` up to `+5VSB`. The measurement
 above is recorded as taken; its interpretation is open pending the test described.*
 
-### Resolution (2026-09-15) — case 1 confirmed
+### Measurement status (updated 2026-09-15) — still pending a clean wire-off read
 
-Re-measured with the green wire **disconnected from the ESP32**, supply plugged in and in
-standby. Unit: Dell **X9072**.
+Readings so far, on a Dell **X9072**, with the ESP32 **connected**:
 
 | Condition | Reading |
 |---|---|
-| `PS_ON` open-circuit (green wire off the ESP32) | **3.8 V** |
+| `PS_ON` at the pin, supply in standby | **3.8 V** |
 | Current into GPIO18 in the OFF state (pin floating / input) | **< 1 mA** (below meter resolution) |
 | Current when `PS_ON` pulled to GND (switch ON) | **~1 mA** |
 
-This is **case 1**: 3.8 V is the supply's genuine open-circuit pull-up voltage, **not** the
-ESP32 clamping a higher rail. The earlier ~5 V concern does not apply to this unit. 3.8 V sits
-only ~0.2 V above the ESP32's abs-max (3.6 V), and the measured leakage is negligible — which
-is why the 2020 build ran for years without damage.
+**Interpretation is not settled** (an earlier note here jumped to "case 1 confirmed" — retracted).
+The current working theory is **case 2**: with the ESP32 connected, the pad's ESD clamp diode
+holds the node at ~3.8 V, and the true open-circuit float — green wire off the ESP32 — is likely
+nearer **~5 V**. The very low current (<1 mA) is consistent with either a high-impedance active
+source *or* a diode barely conducting, so the reading alone can't distinguish the two.
 
-A plain resistor pull-up to +5VSB would idle near 5 V; a regulated-ish **3.8 V at sub-mA**
-instead points to an active, high-impedance source — plausibly an op-amp/comparator biased by
-a divider (Jason's hypothesis, unconfirmed).
+**To settle it:** disconnect the green wire from the ESP32, leave the supply in standby, and
+measure green-to-black plus the current. ~3.8 V ⇒ case 1; a jump toward ~5 V ⇒ case 2.
 
-**Consequences:**
+**Relevant device facts (researched 2026-09-15):**
 
-- Use **3.8 V** as the single figure everywhere (article table, `wiring.svg`, and this config's
-  comments). The config's "~5 V pull-up" / "~5 V on PS_ON" comments are wrong for this PSU and
-  should read 3.8 V.
-- Keep a one-line caveat for readers with a *different* PSU: many ATX supplies pull `PS_ON` to
-  ~5 V per spec, which does exceed the ESP32's abs-max — they should measure, and add a series
-  resistor or a small N-FET open-drain buffer if it's up near 5 V.
-- The open-drain choice stays correct regardless (it keeps the ESP32 from fighting the pull-up);
-  it just isn't what makes the voltage safe here — the supply's low drive current is.
+- The ESP32 has **no 5 V-tolerant GPIOs** (GPIO18 included). Absolute-max input is
+  **VDD + 0.3 V ≈ 3.6 V** (datasheet §4.3) — so a pin at 3.8 V, let alone ~5 V, is outside the
+  rated envelope.
+- ESP32 pads carry **ESD / snapback protection diodes**, but Espressif does **not** spec them as
+  continuous voltage clamps (long-term effects undocumented). Common in-spec mitigations: a
+  series resistor + clamp diode (e.g. BAT54 to 3.3 V), or a small N-FET as a level-safe
+  open-drain buffer.
+- Sources: Espressif ESP32 datasheet (abs-max, §4.3); ESP32 forum threads on 5 V tolerance;
+  Espressif hardware design guidelines (ESD/protection).
 
-*Confidence: 9/10 — direct wire-off measurement on the actual unit. The op-amp/comparator
-mechanism is a plausible guess, not verified.*
+**Consequences for the article:** don't state a single PS_ON voltage as fact yet — table,
+diagram, and config comments stay hedged until the wire-off measurement. If it comes back near
+5 V, add the external-FET / series-resistor "make it in-spec" section (noting it ran for years
+as-is).
+
+*Confidence: not-5V-tolerant + abs-max 3.6 V = 9/10 (datasheet). Case 1 vs case 2 = open,
+pending the wire-off test.*
 
 ## 5. What carries into the rewrite
 
