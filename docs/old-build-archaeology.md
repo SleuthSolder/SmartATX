@@ -186,6 +186,40 @@ confirms case 1. A jump toward ~5 V confirms case 2.
 *Confidence: 8/10 on the ATX specification pulling `PS_ON` up to `+5VSB`. The measurement
 above is recorded as taken; its interpretation is open pending the test described.*
 
+### Resolution (2026-09-15) — case 1 confirmed
+
+Re-measured with the green wire **disconnected from the ESP32**, supply plugged in and in
+standby. Unit: Dell **X9072**.
+
+| Condition | Reading |
+|---|---|
+| `PS_ON` open-circuit (green wire off the ESP32) | **3.8 V** |
+| Current into GPIO18 in the OFF state (pin floating / input) | **< 1 mA** (below meter resolution) |
+| Current when `PS_ON` pulled to GND (switch ON) | **~1 mA** |
+
+This is **case 1**: 3.8 V is the supply's genuine open-circuit pull-up voltage, **not** the
+ESP32 clamping a higher rail. The earlier ~5 V concern does not apply to this unit. 3.8 V sits
+only ~0.2 V above the ESP32's abs-max (3.6 V), and the measured leakage is negligible — which
+is why the 2020 build ran for years without damage.
+
+A plain resistor pull-up to +5VSB would idle near 5 V; a regulated-ish **3.8 V at sub-mA**
+instead points to an active, high-impedance source — plausibly an op-amp/comparator biased by
+a divider (Jason's hypothesis, unconfirmed).
+
+**Consequences:**
+
+- Use **3.8 V** as the single figure everywhere (article table, `wiring.svg`, and this config's
+  comments). The config's "~5 V pull-up" / "~5 V on PS_ON" comments are wrong for this PSU and
+  should read 3.8 V.
+- Keep a one-line caveat for readers with a *different* PSU: many ATX supplies pull `PS_ON` to
+  ~5 V per spec, which does exceed the ESP32's abs-max — they should measure, and add a series
+  resistor or a small N-FET open-drain buffer if it's up near 5 V.
+- The open-drain choice stays correct regardless (it keeps the ESP32 from fighting the pull-up);
+  it just isn't what makes the voltage safe here — the supply's low drive current is.
+
+*Confidence: 9/10 — direct wire-off measurement on the actual unit. The op-amp/comparator
+mechanism is a plausible guess, not verified.*
+
 ## 5. What carries into the rewrite
 
 | From the old build | Status |
