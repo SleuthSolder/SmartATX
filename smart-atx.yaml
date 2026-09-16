@@ -124,13 +124,22 @@ switch:
       # OPEN DRAIN — this is the safety-critical part of the whole config.
       #
       # The pin can only pull PS_ON low or let go of it entirely; it can never
-      # drive PS_ON high. The supply's own internal pull-up (~3.8 V on this PSU)
-      # defines the "off" state. This mirrors what the 2020 sketch did by toggling
-      # pinMode() between INPUT (float = off) and OUTPUT+LOW (drive = on).
+      # drive PS_ON high. The supply's own internal pull-up defines the "off"
+      # state. This mirrors what the 2020 sketch did by toggling pinMode()
+      # between INPUT (float = off) and OUTPUT+LOW (drive = on).
       #
       # A plain push-pull output would be wrong: it would actively drive PS_ON
-      # to 3.3 V against the supply's 3.8 V pull-up, fighting it and sourcing
-      # current into the PSU's control input.
+      # to 3.3 V against that pull-up, fighting it and sourcing current into
+      # the PSU's control input.
+      #
+      # On the PSU used here, PS_ON reads ~3.8 V in standby measured *with the
+      # ESP32 connected*. That is not necessarily the supply's open-circuit
+      # pull-up voltage: an ESP32 pad clamping a higher source through its ESD
+      # diode would read roughly 3.3 V + a diode drop, which is also ~3.8 V.
+      # The two cannot be told apart without measuring green-to-black with the
+      # control wire off the ESP32, and that has not been done. Assume the
+      # supply may pull PS_ON to +5VSB, which is outside the ESP32's absolute
+      # maximum input (VDD + 0.3 V). See the README's note on this.
       mode:
         output: true
         open_drain: true

@@ -69,6 +69,24 @@ The control pin is **open-drain**: it can pull `PS_ON` low or release it, but ne
 it high. The supply's own pull-up defines the off state, so any reset, crash, reflash, or
 loss of WiFi leaves the supply **off**. The firmware cannot fail into an on state.
 
+### A caveat worth knowing
+
+**ESP32 GPIOs are not 5 V tolerant** — absolute maximum input is VDD + 0.3 V ≈ 3.6 V. The
+ATX specification has the supply pull `PS_ON` up to `+5VSB`, so in the off state that pin
+may sit above what the ESP32 is rated for. The original build ran this way for years
+without damage, but "it survived" is not the same as "it's in spec."
+
+On the supply used here, `PS_ON` reads ~3.8 V in standby — but that was measured with the
+ESP32 connected, and an ESP32 clamping a higher voltage through its ESD diode reads about
+the same (3.3 V rail plus a diode drop). The two are indistinguishable without measuring
+green-to-black with the control wire disconnected, which hasn't been done yet. Assume your
+supply may pull `PS_ON` to 5 V until you've measured your own.
+
+If you want the in-spec version: put a series resistor (1–10 kΩ) between the GPIO and
+`PS_ON` to bound the current explicitly, or use a small-signal N-channel MOSFET as a
+level-safe open-drain buffer — gate from the GPIO, drain to `PS_ON`, source to ground. The
+MOSFET keeps the same fail-safe: gate low at reset means off.
+
 ## Quick start
 
 ```bash
