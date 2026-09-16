@@ -124,8 +124,8 @@ switch:
       # OPEN DRAIN — this is the safety-critical part of the whole config.
       #
       # The pin can only pull PS_ON low or let go of it entirely; it can never
-      # drive PS_ON high. The supply's own internal pull-up to +5VSB defines the
-      # "off" state. This mirrors what the 2020 sketch did by toggling
+      # drive PS_ON high. The supply's own internal pull-up (~3.8 V on this PSU)
+      # defines the "off" state. This mirrors what the 2020 sketch did by toggling
       # pinMode() between INPUT (float = off) and OUTPUT+LOW (drive = on).
       #
       # A plain push-pull output would be wrong: it would actively drive PS_ON
