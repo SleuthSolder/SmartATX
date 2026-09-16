@@ -8,30 +8,21 @@ switch on and off. I use mine to run a 3D-printed LED arch lamp.
 > Wiring photos, the flashing walkthrough, and the whole story are over there. This repo is
 > just the config.
 
-## Why this exists
+The original 2020 FauxmoESP firmware is archived at
+[v1-fauxmoesp](https://github.com/SleuthSolder/SmartATX/tree/v1-fauxmoesp).
 
-Back in 2020 I had a pile of old ATX supplies and a light that needed power. ATX supplies
-are great for this — clean power, low voltage, lots of current, and built-in overcurrent
-protection. The catch was controlling it.
+## Safety
 
-You might be tempted to stick a smart plug on the mains side and call it a day, but ATX
-supplies don't love being power cycled like that. There's a better way. The supply has a
-control line that turns the outputs on when you tie it to ground, and a standby line that's
-always live. That's begging for a microcontroller.
+Everything in this project happens outside the power supply, at the 24-pin connector, where
+it's all low voltage with short protection. **Don't open the supply itself unless you can safely work with high voltage.** There's mains
+voltage in there, and the big capacitors stay charged after you unplug it.
 
-So I grabbed an ESP32 and used [FauxmoESP](https://bitbucket.org/xoseperez/fauxmoesp/src/master/)
-to make it pretend to be a Philips Hue bulb, which was one of the few things Alexa could
-control locally without round-tripping through someone's server. It worked really well for
-years, until Alexa changed how device discovery worked and it stopped answering. Chasing
-protocol changes got old and the whole thing ended up on a shelf.
+The 12 V rail can source a lot of current. A dead short will likely trip the overcurrent protection on the power supply, if it doesn't it will likely
+just get hot, so use wire rated for what you're pulling. Also fusing your load isn't a bad idea. The
+[writeup](https://sleuthandsolder.com/lab/reviving-the-smart-atx/) goes into more detail.
 
-These days I run Home Assistant, so this is the same hardware with
-[ESPHome](https://esphome.io/) in place of the old firmware. Voice control goes through
-Home Assistant now instead of anything running on the ESP32, which means the next time a
-cloud vendor changes their mind it isn't my problem.
-
-The old sketch is still in the git history, tagged [`v1-fauxmoesp`](../../tree/v1-fauxmoesp)
-if you want to look at it.
+This is what works on my bench, not a certified design. You're working with mains-powered
+equipment and you do it at your own risk.
 
 ## The wiring
 
@@ -43,10 +34,6 @@ Three wires.
 | `GND` | `GND` (black, pin 19) | Common ground, so everything shares a return path and a reference. |
 | `GPIO18` | `PS_ON` (green, pin 16) | The control line. Pull it to ground and the supply powers up. Release it and the supply's internal pullup takes it high again, and everything shuts off. |
 
-I didn't bother with a case. The wires are soldered straight to the header pins and heat
-shrunk. Everything on this side is low voltage with short protection, so there's not much
-risk to you — worst case you short something and kill the board. Don't open the supply
-itself unless you know your way around mains voltage.
 
 ## One electrical note
 
@@ -67,9 +54,6 @@ The control pin is configured **open drain**, and that's the important bit of th
 An open-drain pin either actively pulls the line to ground or lets go of it entirely. It
 never drives it high. The supply has its own pullup and we don't want to fight it — we only
 want to pull the line down.
-
-The 2020 sketch did the same thing the long way around, flipping the pin between output-low
-to switch on and input to let it float. ESPHome does it with two lines of config.
 
 The nice side effect is that it fails safe. If the ESP32 resets, crashes, gets reflashed, or
 loses Wi-Fi, the pin lets go and the supply shuts off. There's no failure mode where the
@@ -106,9 +90,6 @@ A switch called **Power**, which is the supply itself, plus uptime, Wi-Fi signal
 reset reason, and a restart button tucked into the diagnostics section. The onboard LED
 follows the switch, so you can tell what it's doing from across the bench.
 
-Voice control is whatever Home Assistant already gives you — expose the switch to Alexa or
-Google through its own integration.
-
 ## Using a different board
 
 Built on an **ESP32 DEVKIT V1**. Three values in `smart-atx.yaml` are board-specific and
@@ -125,6 +106,8 @@ smart-atx.yaml          the ESPHome config
 secrets.yaml.example    copy to secrets.yaml and fill in your own
 openspec/               the requirements the config is built against
 ```
+
+Note, this config was generated from my requirements with Claude Code and reviewed by me, and tested.
 
 ## Licence
 
