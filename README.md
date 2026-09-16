@@ -71,16 +71,16 @@ loss of WiFi leaves the supply **off**. The firmware cannot fail into an on stat
 
 ### A caveat worth knowing
 
-**ESP32 GPIOs are not 5 V tolerant** — absolute maximum input is VDD + 0.3 V ≈ 3.6 V. The
-ATX specification has the supply pull `PS_ON` up to `+5VSB`, so in the off state that pin
-may sit above what the ESP32 is rated for. The original build ran this way for years
-without damage, but "it survived" is not the same as "it's in spec."
+**ESP32 GPIOs are not 5 V tolerant** — absolute maximum input is VDD + 0.3 V ≈ 3.6 V.
 
-On the supply used here, `PS_ON` reads ~3.8 V in standby — but that was measured with the
-ESP32 connected, and an ESP32 clamping a higher voltage through its ESD diode reads about
-the same (3.3 V rail plus a diode drop). The two are indistinguishable without measuring
-green-to-black with the control wire disconnected, which hasn't been done yet. Assume your
-supply may pull `PS_ON` to 5 V until you've measured your own.
+On the supply used here, `PS_ON` idles at a **measured ~3.8 V** with **under 1 mA** flowing.
+That is fractionally above the rated maximum, which is why the original build ran for years
+without damage — but it is still outside the datasheet envelope.
+
+**Measure your own supply before assuming it behaves the same.** The ATX specification has
+`PS_ON` pulled up to `+5VSB`, and a supply that actually does that would put ~5 V on a pin
+rated for 3.6 V. Meter between the green wire and any black wire with the supply in standby
+and the ESP32 disconnected.
 
 If you want the in-spec version: put a series resistor (1–10 kΩ) between the GPIO and
 `PS_ON` to bound the current explicitly, or use a small-signal N-channel MOSFET as a
