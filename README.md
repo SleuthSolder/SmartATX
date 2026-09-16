@@ -3,7 +3,7 @@
 An ESP32 that turns an old ATX computer power supply into something Home Assistant can
 switch on and off. I use mine to run a 3D-printed LED arch lamp.
 
-> **Full writeup:** *(website link — TBD)*
+> **Full writeup:** <https://sleuthandsolder.com/lab/reviving-the-smart-atx/>
 >
 > Wiring photos, the flashing walkthrough, and the whole story are over there. This repo is
 > just the config.
