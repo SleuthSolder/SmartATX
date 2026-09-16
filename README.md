@@ -1,146 +1,129 @@
 # SmartATX
 
-Turn a scrap PC power supply into a bench supply you can switch from Home Assistant.
+An ESP32 that turns an old ATX computer power supply into something Home Assistant can
+switch on and off. I use mine to run a 3D-printed LED arch lamp.
 
-An ESP32 grounds the ATX supply's `PS_ON` line on command. It runs from the supply's
-always-on standby rail, so it stays awake even while the supply is off.
-
-> **Full build walkthrough:** *(website link — TBD)*
+> **Full writeup:** *(website link — TBD)*
 >
-> Wiring photos, the flashing walkthrough with screenshots, Home Assistant setup, and the
-> story of why the original version stopped working all live there. This repo is the
-> reference configuration that article points to.
+> Wiring photos, the flashing walkthrough, and the whole story are over there. This repo is
+> just the config.
 
----
+## Why this exists
 
-## This is a rewrite
+Back in 2020 I had a pile of old ATX supplies and a light that needed power. ATX supplies
+are great for this — clean power, low voltage, lots of current, and built-in overcurrent
+protection. The catch was controlling it.
 
-The original 2020 version was an Arduino sketch that used
-[FauxmoESP](https://bitbucket.org/xoseperez/fauxmoesp/src/master/) to emulate a Philips Hue
-bulb, so Alexa could discover it over SSDP/UPnP. It worked for years. Then newer Echo
-devices tightened discovery and stopped finding it, and the project went dark.
+You might be tempted to stick a smart plug on the mains side and call it a day, but ATX
+supplies don't love being power cycled like that. There's a better way. The supply has a
+control line that turns the outputs on when you tie it to ground, and a standby line that's
+always live. That's begging for a microcontroller.
 
-The hardware trick was never the problem — only the software was. This version throws out
-the emulation entirely and rebuilds control on **ESPHome**, with voice control riding
-Home Assistant instead of anything running on the ESP32.
+So I grabbed an ESP32 and used [FauxmoESP](https://bitbucket.org/xoseperez/fauxmoesp/src/master/)
+to make it pretend to be a Philips Hue bulb, which was one of the few things Alexa could
+control locally without round-tripping through someone's server. It worked really well for
+years, until Alexa changed how device discovery worked and it stopped answering. Chasing
+protocol changes got old and the whole thing ended up on a shelf.
 
-The original sketch is preserved at the [`v1-fauxmoesp`](../../tree/v1-fauxmoesp) tag.
+These days I run Home Assistant, so this is the same hardware with
+[ESPHome](https://esphome.io/) in place of the old firmware. Voice control goes through
+Home Assistant now instead of anything running on the ESP32, which means the next time a
+cloud vendor changes their mind it isn't my problem.
 
----
+The old sketch is still in the git history, tagged [`v1-fauxmoesp`](../../tree/v1-fauxmoesp)
+if you want to look at it.
 
-## Safety
+## The wiring
 
-An ATX supply is not a hobby power brick.
+Three wires.
 
-- **The 12 V rail can source tens of amps.** A short across it vaporises wire rather than
-  politely tripping anything. Fuse your loads and use appropriately rated wire.
-- **`+5VSB` is live whenever the supply is plugged in**, regardless of the main rails or
-  the rear rocker switch. Unplug it from the wall before touching any wiring.
-- **Never plug USB into the ESP32 while the supply is connected to mains.** On most ESP32
-  devkits `VIN` and USB `VBUS` meet at the regulator input with no isolation diode, so a
-  live supply ties your computer's 5 V rail to `+5VSB`.
-- **Do not open the supply's case.** Mains voltage on the primary side, and the bulk
-  capacitors stay charged after unplugging. Everything here happens at the 24-pin
-  connector, outside the case.
+| ESP32 pin | ATX wire | What it does |
+|---|---|---|
+| `Vin` | `+5VSB` (violet, pin 9) | The always-on standby line. 5 V, low current. It feeds the board's onboard regulator, which gives the ESP32 its 3.3 V. This is the whole trick — the supply is off, but the ESP32 is awake and ready to turn it on. |
+| `GND` | `GND` (black, pin 19) | Common ground, so everything shares a return path and a reference. |
+| `GPIO18` | `PS_ON` (green, pin 16) | The control line. Pull it to ground and the supply powers up. Release it and the supply's internal pullup takes it high again, and everything shuts off. |
 
-## How it works
+I didn't bother with a case. The wires are soldered straight to the header pins and heat
+shrunk. Everything on this side is low voltage with short protection, so there's not much
+risk to you — worst case you short something and kill the board. Don't open the supply
+itself unless you know your way around mains voltage.
 
-An ATX supply's main rails stay off until `PS_ON` (pin 16, green) is pulled to ground. The
-supply holds that line high itself through an internal pull-up.
+## One electrical note
 
-That's a chicken-and-egg problem: a controller can't ground `PS_ON` without power, and
-there's no power until `PS_ON` is grounded.
+With the ESP32's pin released, `PS_ON` sits at about **3.8 V** and draws basically nothing —
+under 1 mA, near zero on my meter. Pulling it down to switch the supply on draws about 1 mA.
 
-`+5VSB` (pin 9, violet) solves it. That rail is always live while the supply is plugged in
-— it's what keeps a PC's power button alive. It feeds the ESP32 through the dev board's
-onboard regulator, so the ESP32 is always awake and can ground `PS_ON` on command.
+That 3.8 V is a hair over the ESP32's input rating, but at that current it's been perfectly
+happy and has run for years. If you want to do it properly, put a small N-channel MOSFET on
+the line as a buffer so the ESP32 never sees the supply's voltage at all.
 
-## Wiring
+Worth measuring your own supply before you assume it matches. The ATX spec pulls `PS_ON` up
+to `+5VSB`, and 5 V on that pin is a different conversation. Meter the green wire against
+any black one with the supply plugged in and the ESP32 disconnected.
 
-| ESP32 pin | ATX 24-pin | Wire colour | Purpose |
-|-----------|------------|-------------|---------|
-| `Vin`     | pin 9      | violet      | `+5VSB` — always-on standby rail |
-| `GND`     | pin 19     | black       | ground |
-| `GPIO18`  | pin 16     | green       | `PS_ON` — pull low to start the supply |
+## Open drain matters
 
-Built and tested on an **ESP32 DEVKIT V1**.
+The control pin is configured **open drain**, and that's the important bit of the config.
+An open-drain pin either actively pulls the line to ground or lets go of it entirely. It
+never drives it high. The supply has its own pullup and we don't want to fight it — we only
+want to pull the line down.
 
-The control pin is **open-drain**: it can pull `PS_ON` low or release it, but never drive
-it high. The supply's own pull-up defines the off state, so any reset, crash, reflash, or
-loss of WiFi leaves the supply **off**. The firmware cannot fail into an on state.
+The 2020 sketch did the same thing the long way around, flipping the pin between output-low
+to switch on and input to let it float. ESPHome does it with two lines of config.
 
-### A caveat worth knowing
+The nice side effect is that it fails safe. If the ESP32 resets, crashes, gets reflashed, or
+loses Wi-Fi, the pin lets go and the supply shuts off. There's no failure mode where the
+firmware leaves it stuck on.
 
-**ESP32 GPIOs are not 5 V tolerant** — absolute maximum input is VDD + 0.3 V ≈ 3.6 V.
-
-On the supply used here, `PS_ON` idles at a **measured ~3.8 V** with **under 1 mA** flowing.
-That is fractionally above the rated maximum, which is why the original build ran for years
-without damage — but it is still outside the datasheet envelope.
-
-**Measure your own supply before assuming it behaves the same.** The ATX specification has
-`PS_ON` pulled up to `+5VSB`, and a supply that actually does that would put ~5 V on a pin
-rated for 3.6 V. Meter between the green wire and any black wire with the supply in standby
-and the ESP32 disconnected.
-
-If you want the in-spec version: put a series resistor (1–10 kΩ) between the GPIO and
-`PS_ON` to bound the current explicitly, or use a small-signal N-channel MOSFET as a
-level-safe open-drain buffer — gate from the GPIO, drain to `PS_ON`, source to ground. The
-MOSFET keeps the same fail-safe: gate low at reset means off.
-
-## Quick start
+## Getting it running
 
 ```bash
-# 1. Install ESPHome
+# Install ESPHome
 pipx install esphome            # or: uv tool install esphome
 
-# 2. Fill in your secrets
+# Set up your secrets
 cp secrets.yaml.example secrets.yaml
-openssl rand -base64 32         # for api_encryption_key
+openssl rand -base64 32         # generates an api_encryption_key
 $EDITOR secrets.yaml
 
-# 3. Check it
+# Check the config
 esphome config smart-atx.yaml
 
-# 4. Flash over USB (first flash must be wired; OTA after that)
+# Flash it. First one has to be over USB; after that you can go over the air.
 esphome run smart-atx.yaml
 ```
 
-Then adopt it in Home Assistant under **Settings → Devices & Services**, using the API
-encryption key from your `secrets.yaml`.
+Then add it in Home Assistant under **Settings → Devices & Services**. It announces itself,
+and you'll need the `api_encryption_key` from your `secrets.yaml`.
 
-Use `esphome run`, not `esphome upload` — `upload` flashes the last binary that was built
-and does not recompile, which will happily write stale credentials to the board.
+One gotcha: use `esphome run`, not `esphome upload`. `upload` flashes whatever binary was
+built last without recompiling, which is a fun way to flash old Wi-Fi credentials onto a
+board and then wonder why it won't connect.
 
 ## What you get in Home Assistant
 
-| Entity | Type |
-|---|---|
-| **Power** | switch — the supply itself |
-| Uptime | sensor (diagnostic) |
-| WiFi Signal | sensor (diagnostic) |
-| Heap Free | sensor (diagnostic) |
-| Reset Reason | text sensor (diagnostic) |
-| Restart | button (diagnostic) |
+A switch called **Power**, which is the supply itself, plus uptime, Wi-Fi signal, free heap,
+reset reason, and a restart button tucked into the diagnostics section. The onboard LED
+follows the switch, so you can tell what it's doing from across the bench.
 
-The onboard LED mirrors the supply's state, so you can see what it's doing at the bench.
+Voice control is whatever Home Assistant already gives you — expose the switch to Alexa or
+Google through its own integration.
 
-Voice control comes from Home Assistant's own Alexa or Google integrations — expose the
-`Power` switch through whichever you use. Nothing on the ESP32 talks to a voice assistant
-directly, which is why this version won't rot the way the last one did.
+## Using a different board
 
-## Adapting it
+Built on an **ESP32 DEVKIT V1**. Three values in `smart-atx.yaml` are board-specific and
+they're all commented in place: `board`, `status_led_pin`, and `ps_on_pin`.
 
-Three values in `smart-atx.yaml`, all commented in place: `board`, `status_led_pin`, and
-`ps_on_pin`. If you change the control pin, check the ESP32 strapping-pin table first — it
-must boot high-impedance or the supply may kick on during boot. GPIO18 is safe; GPIO0, 2,
-5, 12 and 15 are not.
+If you move the control pin, check the strapping-pin table first. It needs to come up
+high-impedance at boot or the supply will kick on for a moment before ESPHome takes over.
+GPIO18 is fine. GPIO0, 2, 5, 12 and 15 are not.
 
-## Repository layout
+## What's here
 
 ```
-smart-atx.yaml          the ESPHome configuration
-secrets.yaml.example    template — copy to secrets.yaml and fill in
-openspec/               the requirements this firmware is built against
+smart-atx.yaml          the ESPHome config
+secrets.yaml.example    copy to secrets.yaml and fill in your own
+openspec/               the requirements the config is built against
 ```
 
 ## Licence
